@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">GoogleTester</string>
     <string name="title_activity_maps">Map</string>
+    <string name="action_search">Search</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="search_hint">Search Places</string>
+    <string name="search_settings">Search Places</string>
 </resources>
