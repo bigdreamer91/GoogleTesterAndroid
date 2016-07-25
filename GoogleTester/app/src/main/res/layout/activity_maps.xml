@@ -2,14 +2,56 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingLeft="16dp"
-    android:paddingRight="16dp" >
+    android:paddingRight="16dp">
 
-    <EditText
-        android:id="@+id/name"
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Search" />
+        android:layout_height="120dp"
+        android:background="#FFA000"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:id="@+id/textt1"
+        android:text="@string/hint_search_start"
+        android:background="@drawable/buttonshape"
+        android:onClick="startsearch"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_height="25dp"
+        android:layout_below="@+id/textt1"
+        android:id="@+id/textt2"
+        android:text="@string/hint_search_stop"
+        android:background="@drawable/buttonshape"
+        android:onClick="stopsearch"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:id="@+id/button1"
+                android:layout_below="@+id/textt2"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/buttonshape"
+                android:text="Route"
+                android:onClick="startroute"/>
+
+        </RelativeLayout>
+    </android.support.v7.widget.Toolbar>
+
+
 
 <fragment xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:map="http://schemas.android.com/apk/res-auto"
@@ -18,6 +60,6 @@
     android:name="com.google.android.gms.maps.SupportMapFragment"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_below="@+id/name"
+    android:layout_below="@+id/my_toolbar"
     tools:context="com.example.geethanjalijeevanatham.googletester.MapsActivity" />
 </RelativeLayout>

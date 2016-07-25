@@ -12,8 +12,12 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -37,6 +41,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -53,7 +58,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
@@ -65,10 +70,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
     private static final int REQUEST_CODE_AUTOCOMPLETE = 1;
-    EditText editText;
+    private static final int REQUEST_CODE_AUTOCOMPLETE1 = 2;
     LatLng sydney = new LatLng(-34, 151);
+    LatLng sydney1 = new LatLng(-34, 151);
     public static final String TAG = "GoogleTester";
     SupportMapFragment mapFragment;
+    int flag = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,19 +86,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             checkLocationPermission();
         }
         // Initializing
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
         MarkerPoints = new ArrayList<>();
-        editText = (EditText) findViewById(R.id.name);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                openAutocompleteActivity();
-            }
-        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.androidmenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Toast.makeText(this, item.getTitle(), Toast.LENGTH_LONG).show();
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -111,21 +126,73 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
        // mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
         //Initialize Google Play Services
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
+        if(flag==0){
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    buildGoogleApiClient();
+                    mMap.setMyLocationEnabled(true);
+                }
+            }
+            else {
                 buildGoogleApiClient();
                 mMap.setMyLocationEnabled(true);
             }
         }
-        else {
-            buildGoogleApiClient();
-            mMap.setMyLocationEnabled(true);
+        else if(flag==1){
+            if (MarkerPoints.size() > 1) {
+                MarkerPoints.clear();
+                mMap.clear();
+            }
+
+            MarkerPoints.add(sydney);
+            MarkerOptions options = new MarkerOptions();
+            options.position(sydney);
+            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+
+            MarkerPoints.add(sydney1);
+            MarkerOptions options1 = new MarkerOptions();
+            options1.position(sydney1);
+            options1.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+            mMap.addMarker(options);
+            mMap.addMarker(options1);
+
+            // Checks, whether start and end locations are captured
+                //LatLng origin = MarkerPoints.get(0);
+               // LatLng dest = MarkerPoints.get(1);
+
+
+                // Getting URL to the Google Directions API
+                String url = getUrl(sydney, sydney1);
+                //Log.d("onMapClick", url.toString());
+                FetchUrl FetchUrl = new FetchUrl();
+
+                // Start downloading json data from Google Directions API
+                FetchUrl.execute(url);
+
+              LatLng south;
+              LatLng north;
+
+              if(sydney.longitude > sydney1.longitude){
+                  north = sydney;
+                  south = sydney1;
+              }
+              else{
+                  north = sydney1;
+                  south = sydney;
+              }
+                //move map camera
+            LatLngBounds b1 = new LatLngBounds(south,north);
+                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(b1,10));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(14));
+
+
         }
 
+
         // Setting onclick event listener for the map
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+      /*  mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
 
             @Override
             public void onMapClick(LatLng point) {
@@ -149,7 +216,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                  * For the start location, the color of marker is GREEN and
                  * for the end location, the color of marker is RED.
                  */
-                if (MarkerPoints.size() == 1) {
+               /* if (MarkerPoints.size() == 1) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 } else if (MarkerPoints.size() == 2) {
                     options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
@@ -177,8 +244,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
             }
-        });
+        }); */
 
+    }
+
+    public void startsearch(View view){
+            openAutocompleteActivity();
+    }
+
+    public void stopsearch(View view){
+        openAutocompleteActivity1();
+    }
+
+    public void startroute(View view){
+        flag = 1;
+        mapFragment.getMapAsync(this);
     }
 
     private void openAutocompleteActivity() {
@@ -188,6 +268,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
                     .build(this);
             startActivityForResult(intent, REQUEST_CODE_AUTOCOMPLETE);
+        } catch (GooglePlayServicesRepairableException e) {
+            // Indicates that Google Play Services is either not installed or not up to date. Prompt
+            // the user to correct the issue.
+            GoogleApiAvailability.getInstance().getErrorDialog(this, e.getConnectionStatusCode(),
+                    0 /* requestCode */).show();
+        } catch (GooglePlayServicesNotAvailableException e) {
+            // Indicates that Google Play Services is not available and the problem is not easily
+            // resolvable.
+            String message = "Google Play Services is not available: " +
+                    GoogleApiAvailability.getInstance().getErrorString(e.errorCode);
+
+            /*Log.e(TAG, message);
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show(); */
+        }
+    }
+
+    private void openAutocompleteActivity1() {
+        try {
+            // The autocomplete activity requires Google Play Services to be available. The intent
+            // builder checks this and throws an exception if it is not the case.
+            Intent intent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+                    .build(this);
+            startActivityForResult(intent, REQUEST_CODE_AUTOCOMPLETE1);
         } catch (GooglePlayServicesRepairableException e) {
             // Indicates that Google Play Services is either not installed or not up to date. Prompt
             // the user to correct the issue.
@@ -261,6 +364,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 Log.e(TAG, "Error: Status = " + status.toString());
+            } else if (resultCode == RESULT_CANCELED) {
+                // Indicates that the activity closed before a selection was made. For example if
+                // the user pressed the back button.
+            }
+        }
+        else if (requestCode == REQUEST_CODE_AUTOCOMPLETE1) {
+            if (resultCode == RESULT_OK) {
+                // Get the user's selected place from the Intent.
+                Place place1 = PlaceAutocomplete.getPlace(this, data);
+                //Log.i(TAG, "Place Selected: " + place.getName()+ "  " + place.getLatLng());
+                //Log.d(TAG, "Error .... ");
+                // Format the place's details and display them in the TextView.
+                //mPlaceDetailsText.setText(formatPlaceDetails(getResources(), place.getName(),
+                //place.getId(), place.getAddress(), place.getPhoneNumber(),
+                //place.getWebsiteUri()));
+
+                sydney1 = place1.getLatLng();
+                //mapFragment.getMapAsync(this);
+
+
+             /*  PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi.getPlaceById(mGoogleApiClient, "ChIJGVshXgp67ocR6Els7jrt2Nc");
+                placeResult.setResultCallback(new ResultCallback<PlaceBuffer>() {
+                    @Override
+                    public void onResult(PlaceBuffer places) {
+                        if(places.getStatus().isSuccess()){
+                            final Place p1 = places.get(0);
+                            LatLng l1 = p1.getLatLng();
+                            double lat = l1.latitude;
+                            double lng = l1.longitude;
+                            Log.d(TAG,"lat = "+lat+" lng = "+lng);
+                        }
+                        else{
+                            Log.d(TAG,"Error .... ");
+                        }
+                        Log.d(TAG,"Error .... ");
+                    }
+                }); */
+                /*Place p1 = buffer.get(0);
+                LatLng l1 = p1.getLatLng();
+                double lat = l1.latitude;
+                double lng = l1.longitude;
+                Log.d(TAG,"lat = "+lat+" lng = "+lng); */
+
+
+                // Display attributions if required.
+                CharSequence attributions = place1.getAttributions();
+                if (!TextUtils.isEmpty(attributions)) {
+                    //mPlaceAttribution.setText(Html.fromHtml(attributions.toString()));
+                } else {
+                    //mPlaceAttribution.setText("");
+                }
+            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                Status status1 = PlaceAutocomplete.getStatus(this, data);
+                Log.e(TAG, "Error: Status = " + status1.toString());
             } else if (resultCode == RESULT_CANCELED) {
                 // Indicates that the activity closed before a selection was made. For example if
                 // the user pressed the back button.
