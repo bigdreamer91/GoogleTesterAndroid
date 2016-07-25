@@ -20,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -76,6 +77,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public static final String TAG = "GoogleTester";
     SupportMapFragment mapFragment;
     int flag = 0;
+    TextView text1;
+    TextView text2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +92,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
         MarkerPoints = new ArrayList<>();
+
+        text1 = (TextView) findViewById(R.id.textt1);
+        text2 = (TextView) findViewById(R.id.textt2);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -327,6 +333,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //place.getWebsiteUri()));
 
                 sydney = place.getLatLng();
+                text1.setText(place.getName());
                 //mapFragment.getMapAsync(this);
 
 
@@ -381,6 +388,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //place.getWebsiteUri()));
 
                 sydney1 = place1.getLatLng();
+                text2.setText(place1.getName());
                 //mapFragment.getMapAsync(this);
 
 
