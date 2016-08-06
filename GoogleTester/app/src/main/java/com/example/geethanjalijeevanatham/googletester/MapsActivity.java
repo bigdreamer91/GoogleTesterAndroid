@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,7 +48,16 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import com.neno0o.ubersdk.Endpoints.Models.Products.Products;
+import com.neno0o.ubersdk.Endpoints.Models.Requests.EstimateRequest.UberEstimateBody;
+import com.neno0o.ubersdk.Endpoints.Models.Requests.EstimateRequest.UberEstimateRequest;
+import com.neno0o.ubersdk.Endpoints.Models.Times.Times;
+import com.neno0o.ubersdk.Uber;
+
 import org.json.JSONObject;
+import retrofit.Callback;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -79,6 +89,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     int flag = 0;
     TextView text1;
     TextView text2;
+    ViewGroup.LayoutParams paramsMap;
+    String param1,param2;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +112,59 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+        paramsMap = mapFragment.getView().getLayoutParams();
+        paramsMap.height = 1800;
+        mapFragment.getView().setLayoutParams(paramsMap);
         mapFragment.getMapAsync(this);
+
+       /* SessionConfiguration config = new SessionConfiguration.Builder()
+                .setClientId("YOUR_CLIENT_ID") //This is necessary
+                .setRedirectUri("YOUR_REDIRECT_URI") //This is necessary if you'll be using implicit grant
+                .setEnvironment(Environment.SANDBOX) //Useful for testing your app in the sandbox environment
+                .setScopes(Arrays.asList(Scope.PROFILE, Scope.RIDE_WIDGETS)) //Your scopes for authentication here
+                .build();
+
+//This is a convenience method and will set the default config to be used in other components without passing it directly.
+        UberSdk.initialize(config); */
+
+
+
+       /* Uber.getInstance().init("_IggVqi_2mhU_LoJWKJYJh6MCgmmb2XH",
+                "CKsUW7QUFXCQ8TXAh0qreYzYl0P3U7IwOL_hJZGo",
+                "Avg42mWBedhT6WcnEz-uInvKdkKWkPh-A8zBD1TD",
+                "http://localhost");
+        Uber.getInstance().getUberAPIService().getProducts(41.891620, -87.607291, new Callback<Products>() {
+            @Override
+            public void success(Products products, Response response) {
+                Log.d("Product", products.getProducts().get(0).getProductId());
+                Log.d("Products", String.valueOf(products.getProducts().size()));
+                UberEstimateBody uberEstimateBody = new UberEstimateBody(products.getProducts().get(0).getProductId(),
+                        41.891620,
+                        -87.607291,
+                        41.878886,
+                        -87.635882);
+
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        });
+
+
+
+        Uber.getInstance().getUberAPIService().getTimeEstimates(41.891620, -87.607291, new Callback<Times>() {
+            @Override
+            public void success(Times times, Response response) {
+                Log.d("Times", String.valueOf(times.getTimes().size()));
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        }); */
 
     }
 
@@ -170,7 +235,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                 // Getting URL to the Google Directions API
-                String url = getUrl(sydney, sydney1);
+                String url = getUrl(param1, param2);
                 //Log.d("onMapClick", url.toString());
                 FetchUrl FetchUrl = new FetchUrl();
 
@@ -189,9 +254,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                   south = sydney;
               }
                 //move map camera
-            LatLngBounds b1 = new LatLngBounds(south,north);
-                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(b1,10));
+            LatLngBounds b1 = new LatLngBounds(south, north);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(b1, 10));
                 mMap.animateCamera(CameraUpdateFactory.zoomTo(14));
+            paramsMap = mapFragment.getView().getLayoutParams();
+            paramsMap.height = 1130;
+            mapFragment.getView().setLayoutParams(paramsMap);
+            //mapFragment.getMapAsync(this);
 
 
         }
@@ -334,6 +403,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 sydney = place.getLatLng();
                 text1.setText(place.getName());
+                param1 = place.getName().toString()+","+place.getAddress().toString();
                 //mapFragment.getMapAsync(this);
 
 
@@ -389,6 +459,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 sydney1 = place1.getLatLng();
                 text2.setText(place1.getName());
+                param2 = place1.getName().toString()+","+place1.getAddress().toString();
                 //mapFragment.getMapAsync(this);
 
 
@@ -433,21 +504,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private String getUrl(LatLng origin, LatLng dest) {
+    private String getUrl(String name, String addr) {
 
         // Origin of route
-        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+        //String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
+        String str_origin = "origin=" + param1;
+        str_origin = str_origin.replaceAll(" ","+");
 
         // Destination of route
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+        //String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
+        String str_dest = "destination=" + param2;
+        str_dest = str_dest.replaceAll(" ","+");
 
 
         // Sensor enabled
         String sensor = "sensor=false";
 
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor;
+        String mode = "mode=transit";
 
+        // Building the parameters to the web service
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&" + mode;
+        Log.d(TAG,parameters.toString());
+        //parameters="origin=133+Beedle+Drive,Ames,IA+50014,USA&destination=Kildee+Hall,Ames,IA,United+States&mode=transit&key=AIzaSyAKVr5NAFpPbpo6sci5J7bqTk0CSiv2KFU";
+        //Log.d(TAG,parameters.toString());
         // Output format
         String output = "json";
 
